@@ -136,6 +136,12 @@ button:focus-visible, input:focus-visible, .chip:focus-visible {
   padding: 11px 13px; border-radius: 12px; font: inherit;
 }
 .composer input::placeholder { color: #5e6878; }
+.attach {
+  display: grid; place-items: center; width: 42px; flex: none;
+  background: var(--bg2); border: 1px solid var(--line2); color: var(--muted);
+  border-radius: 12px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease;
+}
+.attach:hover { color: var(--accent); border-color: var(--indigo); }
 .composer button {
   background: var(--accent); color: var(--accent-ink); padding: 0 14px; font-weight: 600;
 }

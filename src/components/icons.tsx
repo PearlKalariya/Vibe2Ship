@@ -68,6 +68,18 @@ export const Sparkle = ({ size, className }: P) => (
     <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" />
   </svg>
 );
+export const Paperclip = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <path d="M21 8.5 12.7 16.8a3.5 3.5 0 0 1-5-5l8-8a2.3 2.3 0 0 1 3.3 3.3l-8 8a1.1 1.1 0 0 1-1.6-1.6l7.2-7.2" />
+  </svg>
+);
+export const Image = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <circle cx="8.5" cy="9" r="1.5" />
+    <path d="m4 17 4.5-4.5L13 17M13 14l2.5-2.5L20 16" />
+  </svg>
+);
 export const Clock = ({ size, className }: P) => (
   <svg {...base(size, className)}>
     <circle cx="12" cy="12" r="9" />

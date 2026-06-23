@@ -14,7 +14,18 @@ import {
   Refresh,
   Sparkle,
   Clock,
+  Paperclip,
 } from "./components/icons";
+
+// Read an image File into base64 (without the data: URL prefix) for Gemini inlineData.
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1] ?? "");
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
 
 const SAMPLES = [
   "I have a job interview at Acme on Thursday, a 20-page report due Friday 5pm, and rent due tomorrow. Help.",
@@ -59,12 +70,15 @@ export function App() {
 
   useEffect(() => subscribe(setLocal), []);
 
-  async function send(text: string) {
-    if (!text.trim() || busy) return;
+  async function send(
+    text: string,
+    image?: { data: string; mimeType: string }
+  ) {
+    if ((!text.trim() && !image) || busy) return;
     setInput("");
     setBusy(true);
     try {
-      await runAgentLoop(text);
+      await runAgentLoop(text, image);
     } catch (e) {
       console.error(e);
       update((st) => ({
@@ -73,6 +87,15 @@ export function App() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function attach(file?: File) {
+    if (!file || busy) return;
+    const data = await fileToBase64(file);
+    const text =
+      input.trim() ||
+      "Here is a screenshot of my deadlines/commitments. Extract every date and task, then build my plan.";
+    await send(text, { data, mimeType: file.type });
   }
 
   function reset() {
@@ -130,7 +153,7 @@ export function App() {
             {!started && (
               <div className="empty">
                 <p className="empty-title">Drop your chaos in.</p>
-                <p className="muted">Clutch plans it, schedules it, drafts it — then nudges you to the finish.</p>
+                <p className="muted">Type it, or attach a syllabus / email screenshot — Clutch extracts every deadline, schedules it, drafts what you must send, then nudges you to the finish.</p>
                 <div className="chips">
                   {SAMPLES.map((s, i) => (
                     <button key={i} className="chip" onClick={() => send(s)}>
@@ -176,10 +199,23 @@ export function App() {
             }}
           >
             <label htmlFor="ask" className="sr-only">What do you need to get done?</label>
+            <label className="attach" aria-label="Attach a screenshot" title="Attach a screenshot of your deadlines">
+              <Paperclip size={16} />
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                disabled={busy}
+                onChange={(e) => {
+                  attach(e.target.files?.[0]);
+                  e.currentTarget.value = "";
+                }}
+              />
+            </label>
             <input
               id="ask"
               value={input}
-              placeholder="What do you need to get done?"
+              placeholder="Type, or attach a syllabus / email screenshot…"
               onChange={(e) => setInput(e.target.value)}
             />
             <button type="submit" disabled={busy} aria-label="Send">
