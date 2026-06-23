@@ -1,5 +1,5 @@
 import type { Content, Part } from "@google/genai";
-import { ai, MODEL } from "./gemini";
+import { ai, MODEL, FALLBACK_MODEL } from "./gemini";
 import { SYSTEM_PROMPT } from "./systemPrompt";
 import { functionDeclarations, toolExecutors } from "./tools";
 import { update } from "../store";
@@ -9,6 +9,47 @@ const MAX_TURNS = 8; // safety cap on the agent loop
 
 function trace(entry: TraceEntry) {
   update((st) => ({ trace: [...st.trace, entry] }));
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Gemini returns 503 (overloaded) / 429 (rate limit) under demand spikes — common
+// on a shared key during a hackathon demo. Retry with exponential backoff so a
+// transient spike never kills a live judging run.
+async function generateWithRetry(
+  req: Parameters<typeof ai.models.generateContent>[0],
+  retries = 3
+) {
+  let lastErr: unknown;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await ai.models.generateContent(req);
+    } catch (e) {
+      lastErr = e;
+      const msg = String(e);
+      const transient = /\b(503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded)\b/i.test(
+        msg
+      );
+      if (!transient) throw e;
+      if (attempt === retries) break; // exhausted -> try fallback model below
+      const wait = 800 * 2 ** attempt + Math.random() * 400; // 0.8s,1.6s,3.2s +jitter
+      trace({
+        role: "system",
+        text: `model busy, retrying in ${(wait / 1000).toFixed(1)}s… (${attempt + 1}/${retries})`,
+      });
+      await sleep(wait);
+    }
+  }
+  // Primary stayed overloaded — last-ditch swap to the less-contended model.
+  if (req.model !== FALLBACK_MODEL) {
+    trace({ role: "system", text: `switching to ${FALLBACK_MODEL}…` });
+    try {
+      return await ai.models.generateContent({ ...req, model: FALLBACK_MODEL });
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 /**
@@ -33,7 +74,7 @@ export async function runAgentLoop(
   const contents: Content[] = [{ role: "user", parts: userParts }];
 
   for (let turn = 0; turn < MAX_TURNS; turn++) {
-    const response = await ai.models.generateContent({
+    const response = await generateWithRetry({
       model: MODEL,
       contents,
       config: {

@@ -91,6 +91,18 @@ export const functionDeclarations: FunctionDeclaration[] = [
     parameters: { type: Type.OBJECT, properties: {} },
   },
   {
+    name: "mark_task_done",
+    description:
+      "Mark a task complete when the user reports finishing it. After this, reprioritize_day to re-plan the remaining work.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        taskTitle: { type: Type.STRING },
+      },
+      required: ["taskTitle"],
+    },
+  },
+  {
     name: "set_proactive_nudge",
     description:
       "Schedule a proactive nudge so the agent re-engages the user before a deadline is at risk. Escalate level for more urgent nudges.",
@@ -182,6 +194,17 @@ export const toolExecutors: Record<string, Executor> = {
         risk: Math.round(riskScore(t)),
       })),
     };
+  },
+
+  mark_task_done: ({ taskTitle }) => {
+    const task = findTaskByTitle(taskTitle);
+    if (!task) return { error: `no task titled "${taskTitle}"` };
+    update((st) => ({
+      tasks: st.tasks.map((t) =>
+        t.id === task.id ? { ...t, done: true } : t
+      ),
+    }));
+    return { done: task.title };
   },
 
   set_proactive_nudge: ({ taskTitle, fireAt, message, level }) => {

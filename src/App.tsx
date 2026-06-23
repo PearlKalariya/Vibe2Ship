@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getState, subscribe } from "./store";
+import { getState, subscribe, update } from "./store";
 import type { AppState } from "./types";
 import { runAgentLoop } from "./agent/agentLoop";
 
@@ -21,6 +21,9 @@ export function App() {
       await runAgentLoop(text);
     } catch (e) {
       console.error(e);
+      update((st) => ({
+        trace: [...st.trace, { role: "system", text: `⚠️ ${String(e)}` }],
+      }));
     } finally {
       setBusy(false);
     }
@@ -77,8 +80,11 @@ export function App() {
           <h3>Tasks</h3>
           {state.tasks.length === 0 && <p className="muted">none yet</p>}
           {state.tasks.map((t) => (
-            <div key={t.id} className={`row prio-${t.priority}`}>
-              <span>{t.title}</span>
+            <div
+              key={t.id}
+              className={`row prio-${t.priority}${t.done ? " done" : ""}`}
+            >
+              <span>{t.done ? "✓ " : ""}{t.title}</span>
               <small>
                 {t.priority}
                 {t.deadline ? ` · ${new Date(t.deadline).toLocaleString()}` : ""}

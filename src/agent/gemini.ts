@@ -13,3 +13,6 @@ export const ai = new GoogleGenAI({ apiKey: apiKey ?? "" });
 
 // Flash = fast loop turns. Swap to gemini-2.5-pro for heavy planning if needed.
 export const MODEL = "gemini-2.5-flash";
+
+// Less-contended fallback if the primary is overloaded (503) during a demo.
+export const FALLBACK_MODEL = "gemini-2.5-flash-lite";

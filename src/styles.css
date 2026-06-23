@@ -64,6 +64,9 @@ button:disabled { opacity: .5; cursor: default; }
 .row p { margin: 4px 0 0; color: var(--text); white-space: pre-wrap; }
 .muted { color: var(--muted); }
 
+.row.done { opacity: .5; }
+.row.done span { text-decoration: line-through; }
+
 .prio-critical { border-left: 3px solid var(--crit); }
 .prio-high { border-left: 3px solid var(--high); }
 .prio-medium { border-left: 3px solid var(--med); }
