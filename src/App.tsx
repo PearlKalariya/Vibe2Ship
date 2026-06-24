@@ -3,6 +3,13 @@ import { getState, setState, subscribe, update } from "./store";
 import type { AppState, Priority } from "./types";
 import { runAgentLoop } from "./agent/agentLoop";
 import {
+  enableNotifications,
+  scheduleReminders,
+  demoReminder,
+  onToast,
+  type Toast,
+} from "./notify";
+import {
   Bolt,
   Tool,
   Calendar,
@@ -76,9 +83,30 @@ export function App() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [listening, setListening] = useState(false);
+  const [remindersOn, setRemindersOn] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const recRef = useRef<any>(null);
 
   useEffect(() => subscribe(setLocal), []);
+
+  // Queue reminder alerts; each shows as a center-screen modal until dismissed.
+  useEffect(() => onToast((t) => setToasts((prev) => [...prev, t])), []);
+
+  function dismissAlert(id: string) {
+    setToasts((prev) => prev.filter((x) => x.id !== id));
+  }
+
+  // Re-arm reminders whenever tasks or nudges change.
+  useEffect(() => {
+    if (remindersOn) scheduleReminders(state.tasks, state.nudges);
+  }, [state.tasks, state.nudges, remindersOn]);
+
+  async function enableReminders() {
+    setRemindersOn(true);
+    await enableNotifications(); // best-effort OS permission; toasts work regardless
+    scheduleReminders(state.tasks, state.nudges);
+    demoReminder();
+  }
 
   function toggleVoice() {
     if (!SpeechRec) return;
@@ -159,11 +187,23 @@ export function App() {
             <p>Never miss again. Your agent handles the last mile.</p>
           </div>
         </div>
-        {started && (
-          <button className="ghost" onClick={reset} aria-label="Reset demo">
-            <Refresh size={16} /> Reset
+        <div className="topbar-actions">
+          <button
+            className={`ghost${remindersOn ? " active" : ""}`}
+            onClick={enableReminders}
+            disabled={remindersOn}
+            aria-label="Enable deadline reminders"
+            title="Get reminded 1 day and 30 min before deadlines"
+          >
+            <Bell size={16} />
+            {remindersOn ? "Reminders on" : "Enable reminders"}
           </button>
-        )}
+          {started && (
+            <button className="ghost" onClick={reset} aria-label="Reset demo">
+              <Refresh size={16} /> Reset
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Live impact stats */}
@@ -346,6 +386,33 @@ export function App() {
       <footer className="foot">
         Built with Google AI Studio · Gemini 2.5 · function-calling agent loop
       </footer>
+
+      {/* Reminder alert — center-screen modal, blurred backdrop, OS-independent */}
+      {toasts[0] && (
+        <div
+          className="alert-backdrop"
+          role="alertdialog"
+          aria-modal="true"
+          onClick={() => dismissAlert(toasts[0].id)}
+        >
+          <div
+            className={`alert-card lvl-${Math.min(toasts[0].level, 3)}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="alert-ring">
+              <Bell size={34} />
+            </span>
+            <h2>{toasts[0].title}</h2>
+            <p>{toasts[0].body}</p>
+            <button className="alert-btn" onClick={() => dismissAlert(toasts[0].id)}>
+              Got it
+            </button>
+            {toasts.length > 1 && (
+              <span className="alert-more">+{toasts.length - 1} more reminder{toasts.length - 1 > 1 ? "s" : ""}</span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
