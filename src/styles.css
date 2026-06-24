@@ -124,6 +124,8 @@ button:focus-visible, input:focus-visible, .chip:focus-visible {
 .tool-done { color: var(--low); }
 
 /* thinking skeleton */
+.working { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; }
+.working-label { color: var(--muted); font-size: 13px; animation: fadeIn 0.3s ease; }
 .skeleton { display: inline-flex; gap: 5px; align-self: flex-start; padding: 10px 13px; }
 .skeleton span {
   width: 7px; height: 7px; border-radius: 50%; background: var(--muted);

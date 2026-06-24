@@ -33,16 +33,14 @@ async function generateWithRetry(
       if (!transient) throw e;
       if (attempt === retries) break; // exhausted -> try fallback model below
       const wait = 800 * 2 ** attempt + Math.random() * 400; // 0.8s,1.6s,3.2s +jitter
-      trace({
-        role: "system",
-        text: `model busy, retrying in ${(wait / 1000).toFixed(1)}s… (${attempt + 1}/${retries})`,
-      });
+      // Keep retries quiet in the UI (the "thinking" status covers it); log for devs.
+      console.warn(`[Clutch] model busy, retry ${attempt + 1}/${retries} in ${wait}ms`);
       await sleep(wait);
     }
   }
   // Primary stayed overloaded — last-ditch swap to the less-contended model.
   if (req.model !== FALLBACK_MODEL) {
-    trace({ role: "system", text: `switching to ${FALLBACK_MODEL}…` });
+    console.warn(`[Clutch] falling back to ${FALLBACK_MODEL}`);
     try {
       return await ai.models.generateContent({ ...req, model: FALLBACK_MODEL });
     } catch (e) {

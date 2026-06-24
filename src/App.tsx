@@ -85,9 +85,23 @@ export function App() {
   const [listening, setListening] = useState(false);
   const [remindersOn, setRemindersOn] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [busyMsg, setBusyMsg] = useState("Thinking");
   const recRef = useRef<any>(null);
 
   useEffect(() => subscribe(setLocal), []);
+
+  // Rotate a friendly working status while the agent runs.
+  useEffect(() => {
+    if (!busy) return;
+    const steps = ["Thinking", "Reading your tasks", "Planning", "Prioritising", "Scheduling", "Almost there"];
+    let i = 0;
+    setBusyMsg(steps[0]);
+    const id = setInterval(() => {
+      i = Math.min(i + 1, steps.length - 1);
+      setBusyMsg(steps[i]);
+    }, 1600);
+    return () => clearInterval(id);
+  }, [busy]);
 
   // Queue reminder alerts; each shows as a center-screen modal until dismissed.
   useEffect(() => onToast((t) => setToasts((prev) => [...prev, t])), []);
@@ -142,8 +156,13 @@ export function App() {
       await runAgentLoop(text, image);
     } catch (e) {
       console.error(e);
+      const msg = String(e);
+      const overloaded = /\b(503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|overloaded)\b/i.test(msg);
+      const friendly = overloaded
+        ? "Clutch is in high demand right now. Give it a few seconds and try again — your tasks are safe."
+        : "Something went wrong reaching the assistant. Please try again.";
       update((st) => ({
-        trace: [...st.trace, { role: "system", text: `${String(e)}` }],
+        trace: [...st.trace, { role: "system", text: friendly }],
       }));
     } finally {
       setBusy(false);
@@ -258,8 +277,11 @@ export function App() {
             })}
 
             {busy && (
-              <div className="skeleton" aria-label="Agent thinking">
-                <span /><span /><span />
+              <div className="working" aria-live="polite">
+                <div className="skeleton" aria-hidden="true">
+                  <span /><span /><span />
+                </div>
+                <span className="working-label">{busyMsg}…</span>
               </div>
             )}
           </div>
