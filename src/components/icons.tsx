@@ -80,6 +80,12 @@ export const Image = ({ size, className }: P) => (
     <path d="m4 17 4.5-4.5L13 17M13 14l2.5-2.5L20 16" />
   </svg>
 );
+export const Mic = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <rect x="9" y="2.5" width="6" height="11" rx="3" />
+    <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+  </svg>
+);
 export const Clock = ({ size, className }: P) => (
   <svg {...base(size, className)}>
     <circle cx="12" cy="12" r="9" />

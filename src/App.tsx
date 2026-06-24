@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getState, setState, subscribe, update } from "./store";
 import type { AppState, Priority } from "./types";
 import { runAgentLoop } from "./agent/agentLoop";
@@ -15,7 +15,15 @@ import {
   Sparkle,
   Clock,
   Paperclip,
+  Mic,
 } from "./components/icons";
+
+// Web Speech API (browser dictation) — present in Chrome/Edge as webkitSpeechRecognition.
+const SpeechRec: any =
+  (typeof window !== "undefined" &&
+    ((window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition)) ||
+  null;
 
 // Read an image File into base64 (without the data: URL prefix) for Gemini inlineData.
 function fileToBase64(file: File): Promise<string> {
@@ -67,8 +75,33 @@ export function App() {
   const [state, setLocal] = useState<AppState>(getState());
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [listening, setListening] = useState(false);
+  const recRef = useRef<any>(null);
 
   useEffect(() => subscribe(setLocal), []);
+
+  function toggleVoice() {
+    if (!SpeechRec) return;
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    const rec = new SpeechRec();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.onresult = (e: any) => {
+      const text = Array.from(e.results)
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setInput(text);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recRef.current = rec;
+    setListening(true);
+    rec.start();
+  }
 
   async function send(
     text: string,
@@ -215,9 +248,21 @@ export function App() {
             <input
               id="ask"
               value={input}
-              placeholder="Type, or attach a syllabus / email screenshot…"
+              placeholder="Type, talk, or attach a screenshot…"
               onChange={(e) => setInput(e.target.value)}
             />
+            {SpeechRec && (
+              <button
+                type="button"
+                className={`mic${listening ? " on" : ""}`}
+                onClick={toggleVoice}
+                disabled={busy}
+                aria-label={listening ? "Stop voice input" : "Start voice input"}
+                title="Voice input"
+              >
+                <Mic size={16} />
+              </button>
+            )}
             <button type="submit" disabled={busy} aria-label="Send">
               <Send size={16} />
             </button>

@@ -142,6 +142,13 @@ button:focus-visible, input:focus-visible, .chip:focus-visible {
   border-radius: 12px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease;
 }
 .attach:hover { color: var(--accent); border-color: var(--indigo); }
+.mic {
+  width: 42px; flex: none; background: var(--bg2); border: 1px solid var(--line2);
+  color: var(--muted); justify-content: center;
+}
+.mic:hover { color: var(--text); border-color: var(--indigo); }
+.mic.on { color: #fff; background: var(--crit); border-color: var(--crit); animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 93, 108, 0.5); } 50% { box-shadow: 0 0 0 6px rgba(255, 93, 108, 0); } }
 .composer button {
   background: var(--accent); color: var(--accent-ink); padding: 0 14px; font-weight: 600;
 }

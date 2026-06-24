@@ -1,4 +1,5 @@
 import { Type, type FunctionDeclaration } from "@google/genai";
+import { ai, MODEL } from "./gemini";
 import { getState, uid, update } from "../store";
 import type { Priority, Task } from "../types";
 
@@ -173,13 +174,29 @@ export const toolExecutors: Record<string, Executor> = {
     return { drafted: draft };
   },
 
-  // Day 3 replaces this stub with a real Gemini call using Google Search grounding.
-  research_web: ({ query }) => {
-    return {
-      query,
-      summary: `[stub] grounded research for "${query}" lands Day 3 (Google Search grounding).`,
-      grounded: false,
-    };
+  // Real Google Search grounding: a separate Gemini call with the googleSearch tool,
+  // kept out of the main function-calling loop (a request mixes one tool mode cleanly).
+  research_web: async ({ query }) => {
+    try {
+      const r = await ai.models.generateContent({
+        model: MODEL,
+        contents: `Research this and give a tight, actionable summary (3-5 bullet points) for someone who needs to act now: ${query}`,
+        config: { tools: [{ googleSearch: {} }] },
+      });
+      const meta: any = r.candidates?.[0]?.groundingMetadata;
+      const sources: string[] = (meta?.groundingChunks ?? [])
+        .map((c: any) => c?.web?.uri)
+        .filter(Boolean)
+        .slice(0, 3);
+      return {
+        query,
+        summary: r.text ?? "(no result)",
+        sources,
+        grounded: true,
+      };
+    } catch (e) {
+      return { query, summary: `research unavailable: ${String(e)}`, grounded: false };
+    }
   },
 
   reprioritize_day: () => {
