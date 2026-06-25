@@ -35,6 +35,15 @@ export interface Nudge {
   level: number; // escalation level
 }
 
+export interface Habit {
+  id: string;
+  title: string;
+  cadence: "daily" | "weekly";
+  streak: number;
+  lastDone?: string; // YYYY-MM-DD of last check-in
+  history: string[]; // YYYY-MM-DD check-in dates
+}
+
 // One turn in the visible conversation / agent trace.
 export interface TraceEntry {
   role: "user" | "agent" | "tool" | "system";
@@ -48,5 +57,6 @@ export interface AppState {
   events: CalendarEvent[];
   drafts: Draft[];
   nudges: Nudge[];
+  habits: Habit[];
   trace: TraceEntry[];
 }

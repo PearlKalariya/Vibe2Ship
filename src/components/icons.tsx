@@ -80,6 +80,28 @@ export const Image = ({ size, className }: P) => (
     <path d="m4 17 4.5-4.5L13 17M13 14l2.5-2.5L20 16" />
   </svg>
 );
+export const Wand = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <path d="M15 4V2M15 10V8M11.5 5.5h-2M20.5 5.5h-2M18 8l1 1M12 2l1 1M4 20l9-9M14.5 6.5 17 9" />
+  </svg>
+);
+export const Alert = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <path d="M12 3 2.5 20h19L12 3Z" />
+    <path d="M12 10v4M12 17.5v.01" />
+  </svg>
+);
+export const Flame = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <path d="M12 2.5c2 3 5 4.5 5 8.5a5 5 0 1 1-10 0c0-1.4.5-2.4 1.2-3.2C8.8 9 9.5 10 10.5 10c.8-2.2-.5-4.5 1.5-7.5Z" />
+  </svg>
+);
+export const CalendarPlus = ({ size, className }: P) => (
+  <svg {...base(size, className)}>
+    <rect x="3" y="4.5" width="18" height="16" rx="2" />
+    <path d="M3 9h18M8 2.5v4M16 2.5v4M12 13v4M10 15h4" />
+  </svg>
+);
 export const Mic = ({ size, className }: P) => (
   <svg {...base(size, className)}>
     <rect x="9" y="2.5" width="6" height="11" rx="3" />

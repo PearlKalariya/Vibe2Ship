@@ -34,10 +34,15 @@ You can hand Clutch your chaos three ways: **type it**, **speak it** (voice), or
 - **7 agent tools via Gemini function calling:** decompose a goal into subtasks, reprioritize by deadline-risk, schedule focus blocks, draft emails/messages, web research, set proactive nudges, mark tasks done.
 - **Screenshot-to-plan (multimodal):** attach a syllabus/email/calendar image → Gemini vision extracts every date and task → auto-builds the timeline.
 - **Deadline-risk prioritization:** ranks tasks by slack-time × importance, so the most at-risk work surfaces first.
+- **Plan My Day (one-click autonomy):** the agent reads every open task and your calendar, then builds a conflict-free, time-blocked schedule and tells you exactly what to start now.
+- **Predictive miss-risk:** each task shows a live "% chance of missing" score from effort-needed vs time-left — foresight, not just reminders.
 - **Drafts the work, not just reminders:** writes the actual email/message (e.g. extension request, payment reminder) ready to send.
 - **Grounded research:** pulls current facts (e.g. interview-company prep) via Google Search grounding and folds them into the plan.
 - **Proactive nudges with escalation:** re-engages you *before* something is at risk, escalating urgency.
 - **Real deadline notifications:** browser push reminders fire automatically 1 day and 30 minutes before every deadline (plus the agent's own nudges) — reminders that actually reach you, not just stored.
+- **Goal & habit tracking:** track recurring goals (study daily, gym) with streak counters and one-tap check-ins.
+- **Google Calendar integration:** every scheduled block has a one-click "Add to Google Calendar" link.
+- **Personalized recommendations:** every plan ends with one tailored productivity tip for your situation.
 - **Voice-enabled assistance:** dictate your tasks hands-free.
 - **Live impact dashboard:** open tasks, scheduled blocks, drafts, and "due &lt; 24h" risk count update in real time.
 - **Resilient by design:** automatic retry + model fallback so transient API spikes never break a live session.
@@ -61,9 +66,10 @@ You can hand Clutch your chaos three ways: **type it**, **speak it** (voice), or
 3. **Gemini Function Calling** — powers the 7-tool agentic action layer (the core of the autonomy).
 4. **Gemini Multimodal Vision** — extracts deadlines and tasks directly from uploaded images.
 5. **Google Search Grounding** — real-time grounded research feeding the agent's plan.
-6. **Web Speech API** — voice-enabled task capture.
+6. **Google Calendar** — one-click add-to-calendar links for every scheduled block.
+7. **Web Speech API** — voice-enabled task capture.
 
-*(Optional / roadmap: Google Calendar API for two-way sync and Firebase/Firestore for persistence + Google Sign-In.)*
+*(Optional / roadmap: Google Calendar API two-way OAuth sync and Firebase/Firestore for persistence + Google Sign-In.)*
 
 ---
 

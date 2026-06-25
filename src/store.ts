@@ -7,6 +7,7 @@ let state: AppState = {
   events: [],
   drafts: [],
   nudges: [],
+  habits: [],
   trace: [],
 };
 

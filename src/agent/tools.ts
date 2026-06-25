@@ -1,7 +1,8 @@
 import { Type, type FunctionDeclaration } from "@google/genai";
 import { ai, MODEL } from "./gemini";
 import { getState, uid, update } from "../store";
-import type { Priority, Task } from "../types";
+import { checkinHabit } from "../util";
+import type { Habit, Priority, Task } from "../types";
 
 // ---------------------------------------------------------------------------
 // Tool declarations — the agent's action surface. This is the "Agentic Depth".
@@ -101,6 +102,20 @@ export const functionDeclarations: FunctionDeclaration[] = [
         taskTitle: { type: Type.STRING },
       },
       required: ["taskTitle"],
+    },
+  },
+  {
+    name: "track_habit",
+    description:
+      "Create or check in a recurring goal/habit (e.g. 'study daily', 'gym 3x a week', 'drink water'). Use when the user mentions something they want to do regularly, not a one-off task. Action 'create' starts tracking; 'checkin' logs that they did it today and grows their streak.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING },
+        cadence: { type: Type.STRING, enum: ["daily", "weekly"] },
+        action: { type: Type.STRING, enum: ["create", "checkin"] },
+      },
+      required: ["title", "action"],
     },
   },
   {
@@ -222,6 +237,26 @@ export const toolExecutors: Record<string, Executor> = {
       ),
     }));
     return { done: task.title };
+  },
+
+  track_habit: ({ title, cadence, action }) => {
+    let habit = getState().habits.find(
+      (h) => h.title.toLowerCase() === String(title).toLowerCase()
+    );
+    if (!habit) {
+      habit = {
+        id: uid("habit"),
+        title,
+        cadence: (cadence as Habit["cadence"]) || "daily",
+        streak: 0,
+        history: [],
+      };
+      const created = habit;
+      update((st) => ({ habits: [...st.habits, created] }));
+    }
+    if (action === "checkin") checkinHabit(habit.id);
+    const after = getState().habits.find((h) => h.id === habit!.id);
+    return { habit: after };
   },
 
   set_proactive_nudge: ({ taskTitle, fireAt, message, level }) => {

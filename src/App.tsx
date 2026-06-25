@@ -23,7 +23,12 @@ import {
   Clock,
   Paperclip,
   Mic,
+  Flame,
+  CalendarPlus,
+  Wand,
+  Alert,
 } from "./components/icons";
+import { gcalUrl, checkinHabit, doneToday, missRisk } from "./util";
 
 // Web Speech API (browser dictation) — present in Chrome/Edge as webkitSpeechRecognition.
 const SpeechRec: any =
@@ -179,7 +184,13 @@ export function App() {
   }
 
   function reset() {
-    setState({ tasks: [], events: [], drafts: [], nudges: [], trace: [] });
+    setState({ tasks: [], events: [], drafts: [], nudges: [], habits: [], trace: [] });
+  }
+
+  function planMyDay() {
+    send(
+      "Plan my day: review my open tasks and what's already on my calendar, then build a realistic, conflict-free time-blocked schedule for the rest of today and tomorrow. Schedule a focus block for each task — highest deadline-risk first, working around my busy times — and tell me exactly what to start right now."
+    );
   }
 
   const open = state.tasks.filter((t) => !t.done);
@@ -207,6 +218,16 @@ export function App() {
           </div>
         </div>
         <div className="topbar-actions">
+          {open.length > 0 && (
+            <button
+              className="primary"
+              onClick={planMyDay}
+              disabled={busy}
+              aria-label="Plan my day automatically"
+            >
+              <Wand size={16} /> Plan my day
+            </button>
+          )}
           <button
             className={`ghost${remindersOn ? " active" : ""}`}
             onClick={enableReminders}
@@ -348,6 +369,14 @@ export function App() {
                     <span className={`pill p-${t.priority}`}>{t.priority}</span>
                     {t.deadline && <span className="due">{relTime(t.deadline)}</span>}
                     {t.estMinutes ? <span className="muted">· {t.estMinutes}m</span> : null}
+                    {!t.done && (() => {
+                      const r = missRisk(t);
+                      return r != null && r >= 50 ? (
+                        <span className={`risk ${r >= 75 ? "hi" : ""}`} title="Predicted chance of missing this">
+                          <Alert size={11} /> {r}% risk
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               </div>
@@ -366,6 +395,16 @@ export function App() {
                     {new Date(e.end).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
+                <a
+                  className="gcal"
+                  href={gcalUrl(e.title, e.start, e.end)}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Add to Google Calendar"
+                  aria-label="Add to Google Calendar"
+                >
+                  <CalendarPlus size={15} />
+                </a>
               </div>
             ))}
           </Group>
@@ -401,6 +440,32 @@ export function App() {
                 </div>
               </div>
             ))}
+          </Group>
+
+          <Group icon={<Flame size={14} />} title="Habits" count={state.habits.length}>
+            {state.habits.map((h) => {
+              const did = doneToday(h.lastDone);
+              return (
+                <div key={h.id} className="card habit">
+                  <span className={`flame${h.streak > 0 ? " lit" : ""}`}>
+                    <Flame size={16} />
+                  </span>
+                  <div className="card-body">
+                    <span className="task-title">{h.title}</span>
+                    <span className="muted">
+                      {h.streak}-day streak · {h.cadence}
+                    </span>
+                  </div>
+                  <button
+                    className={`checkin${did ? " done" : ""}`}
+                    onClick={() => checkinHabit(h.id)}
+                    disabled={did}
+                  >
+                    {did ? <><Check size={13} /> Today</> : "Check in"}
+                  </button>
+                </div>
+              );
+            })}
           </Group>
         </section>
       </div>
